@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>7/10 颱風天出勤回報</title>
+<style>
+  :root{
+    --navy:#0F1B2D;
+    --panel:#182642;
+    --panel-2:#1F3050;
+    --amber:#F5A623;
+    --danger:#E24C4C;
+    --ok:#3FB68A;
+    --text:#EDEFF3;
+    --muted:#8592AC;
+    --line:#2A3B5C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--navy);
+    color:var(--text);
+    font-family:'Noto Sans TC', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    padding-bottom:110px;
+  }
+  .warning-stripe{
+    height:10px;
+    background:repeating-linear-gradient(
+      135deg,
+      var(--amber) 0px, var(--amber) 14px,
+      var(--danger) 14px, var(--danger) 28px
+    );
+  }
+  header{
+    padding:22px 20px 16px;
+    background:linear-gradient(180deg, var(--panel) 0%, var(--navy) 100%);
+    border-bottom:1px solid var(--line);
+  }
+  .eyebrow{
+    font-family:'Courier New', monospace;
+    letter-spacing:2px;
+    font-size:12px;
+    color:var(--amber);
+    text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  h1{
+    margin:0 0 4px;
+    font-size:26px;
+    font-weight:800;
+    letter-spacing:0.5px;
+  }
+  .sub{
+    color:var(--muted);
+    font-size:14px;
+    line-height:1.5;
+  }
+  .counter-bar{
+    margin:16px 20px 0;
+    padding:14px 16px;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .counter-label{font-size:13px;color:var(--muted);}
+  .counter-num{
+    font-family:'Courier New', monospace;
+    font-size:20px;
+    font-weight:700;
+    color:var(--amber);
+  }
+  .search{
+    margin:16px 20px 8px;
+  }
+  .search input{
+    width:100%;
+    padding:12px 14px;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    font-size:15px;
+    outline:none;
+  }
+  .search input:focus{border-color:var(--amber);}
+  .search input::placeholder{color:var(--muted);}
+  .toolbar{
+    display:flex;
+    gap:8px;
+    margin:10px 20px 6px;
+  }
+  .toolbar button{
+    flex:1;
+    padding:8px 0;
+    border-radius:8px;
+    border:1px solid var(--line);
+    background:transparent;
+    color:var(--muted);
+    font-size:12.5px;
+    cursor:pointer;
+  }
+  .toolbar button:hover{border-color:var(--amber);color:var(--amber);}
+  .list{
+    margin:10px 20px 0;
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+  }
+  .row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:12px 14px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .row.you{
+    border-color:var(--amber);
+    background:var(--panel-2);
+  }
+  .name-wrap{display:flex;flex-direction:column;min-width:0;}
+  .name{
+    font-size:15.5px;
+    font-weight:600;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+  .tag{
+    font-size:10.5px;
+    color:var(--amber);
+    margin-top:2px;
+  }
+  .toggle-group{
+    display:flex;
+    border:1px solid var(--line);
+    border-radius:999px;
+    overflow:hidden;
+    flex-shrink:0;
+  }
+  .toggle-group button{
+    border:none;
+    padding:7px 14px;
+    font-size:13px;
+    background:transparent;
+    color:var(--muted);
+    cursor:pointer;
+    font-weight:600;
+  }
+  .toggle-group button.active-yes{
+    background:var(--ok);
+    color:#08281c;
+  }
+  .toggle-group button.active-no{
+    background:var(--danger);
+    color:#2b0a0a;
+  }
+  .footer-bar{
+    position:fixed;
+    bottom:0;left:0;right:0;
+    background:linear-gradient(180deg, rgba(15,27,45,0), var(--navy) 25%);
+    padding:18px 20px 20px;
+  }
+  .submit-btn{
+    width:100%;
+    padding:15px;
+    border-radius:12px;
+    border:none;
+    background:var(--amber);
+    color:#2b1900;
+    font-size:16px;
+    font-weight:800;
+    cursor:pointer;
+    letter-spacing:1px;
+  }
+  .submit-btn:disabled{
+    background:#3a4257;
+    color:#7c8aa0;
+    cursor:not-allowed;
+  }
+  .status-msg{
+    text-align:center;
+    font-size:13px;
+    color:var(--muted);
+    margin-top:8px;
+    min-height:16px;
+  }
+  .status-msg.ok{color:var(--ok);}
+  .status-msg.err{color:var(--danger);}
+</style>
+</head>
+<body>
+
+<div class="warning-stripe"></div>
+
+<header>
+  <div class="eyebrow">TYPHOON REPORT · 7/10</div>
+  <h1>颱風天出勤回報</h1>
+  <div class="sub">請每位成員勾選 7/10 (五) 是否有到公司上班,完成後點擊下方送出。</div>
+</header>
+
+<div class="counter-bar">
+  <span class="counter-label">已回報</span>
+  <span class="counter-num" id="reportedCount">0 / 25</span>
+</div>
+
+<div class="search">
+  <input type="text" id="searchInput" placeholder="搜尋姓名...">
+</div>
+
+<div class="toolbar">
+  <button id="allYesBtn">全部有來</button>
+  <button id="allNoBtn">全部沒來</button>
+  <button id="resetBtn">重設</button>
+</div>
+
+<div class="list" id="list"></div>
+
+<div class="footer-bar">
+  <button class="submit-btn" id="submitBtn">送出回報</button>
+  <div class="status-msg" id="statusMsg"></div>
+</div>
+
+<script>
+// ====== 名單 (25人, 依群組成員清單) ======
+const members = [
+  "Taylor",
+  "Boris",
+  "calvin chen",
+  "Eddy Sheen",
+  "Johnny",
+  "Leslie Wang 王德邦",
+  "MIKE 家弘",
+  "Peter Chen",
+  "Rain",
+  "Ted Fang",
+  "wei",
+  "Yi-Ren Chen",
+  "周德明",
+  "徐維濬",
+  "林峻豪",
+  "林志明",
+  "柯明鑫(綺又爸爸)",
+  "欣怡",
+  "沈柏彤 Eros",
+  "泳霖kobe",
+  "莊茗翔",
+  "藍榮賢",
+  "鄒立德",
+  "顧憲昇 Alex",
+  "yu-syuan"
+];
+
+// ====== 請將下面換成你自己部署的 Google Apps Script Web App URL ======
+const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/YOUR_DEPLOYMENT_ID/exec";
+
+const state = {}; // name -> "yes" | "no" | null
+members.forEach(n => state[n] = null);
+
+const listEl = document.getElementById('list');
+const countEl = document.getElementById('reportedCount');
+const searchInput = document.getElementById('searchInput');
+
+function render(filter=""){
+  listEl.innerHTML = "";
+  const f = filter.trim().toLowerCase();
+  members.forEach(name => {
+    if(f && !name.toLowerCase().includes(f)) return;
+    const row = document.createElement('div');
+    row.className = 'row' + (name === "Taylor" ? " you" : "");
+
+    const nameWrap = document.createElement('div');
+    nameWrap.className = 'name-wrap';
+    const nameEl = document.createElement('div');
+    nameEl.className = 'name';
+    nameEl.textContent = name;
+    nameWrap.appendChild(nameEl);
+    if(name === "Taylor"){
+      const tag = document.createElement('div');
+      tag.className = 'tag';
+      tag.textContent = '本人';
+      nameWrap.appendChild(tag);
+    }
+
+    const group = document.createElement('div');
+    group.className = 'toggle-group';
+
+    const yesBtn = document.createElement('button');
+    yesBtn.textContent = '有來';
+    const noBtn = document.createElement('button');
+    noBtn.textContent = '沒來';
+
+    function refreshBtns(){
+      yesBtn.className = state[name] === 'yes' ? 'active-yes' : '';
+      noBtn.className = state[name] === 'no' ? 'active-no' : '';
+    }
+    refreshBtns();
+
+    yesBtn.onclick = () => { state[name] = (state[name]==='yes') ? null : 'yes'; refreshBtns(); updateCount(); };
+    noBtn.onclick = () => { state[name] = (state[name]==='no') ? null : 'no'; refreshBtns(); updateCount(); };
+
+    group.appendChild(yesBtn);
+    group.appendChild(noBtn);
+
+    row.appendChild(nameWrap);
+    row.appendChild(group);
+    listEl.appendChild(row);
+  });
+}
+
+function updateCount(){
+  const reported = members.filter(n => state[n] !== null).length;
+  countEl.textContent = `${reported} / ${members.length}`;
+}
+
+document.getElementById('allYesBtn').onclick = () => {
+  members.forEach(n => state[n] = 'yes');
+  render(searchInput.value);
+  updateCount();
+};
+document.getElementById('allNoBtn').onclick = () => {
+  members.forEach(n => state[n] = 'no');
+  render(searchInput.value);
+  updateCount();
+};
+document.getElementById('resetBtn').onclick = () => {
+  members.forEach(n => state[n] = null);
+  render(searchInput.value);
+  updateCount();
+};
+
+searchInput.addEventListener('input', (e) => render(e.target.value));
+
+document.getElementById('submitBtn').onclick = async () => {
+  const statusMsg = document.getElementById('statusMsg');
+  const unreported = members.filter(n => state[n] === null);
+  if(unreported.length > 0){
+    statusMsg.className = 'status-msg err';
+    statusMsg.textContent = `尚有 ${unreported.length} 人未勾選,請確認後再送出。`;
+    return;
+  }
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  statusMsg.className = 'status-msg';
+  statusMsg.textContent = '送出中...';
+
+  const payload = {
+    date: "2026-07-10",
+    submittedAt: new Date().toISOString(),
+    records: members.map(n => ({ name: n, attended: state[n] === 'yes' }))
+  };
+
+  try{
+    if(GOOGLE_SCRIPT_URL.includes("YOUR_DEPLOYMENT_ID")){
+      throw new Error("尚未設定 Google Apps Script URL");
+    }
+    await fetch(GOOGLE_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain' },
+      body: JSON.stringify(payload)
+    });
+    statusMsg.className = 'status-msg ok';
+    statusMsg.textContent = '回報成功,已記錄到 Google 工作表 ✓';
+  }catch(err){
+    statusMsg.className = 'status-msg err';
+    statusMsg.textContent = '送出失敗:' + err.message;
+    btn.disabled = false;
+  }
+};
+
+render();
+updateCount();
+</script>
+
+</body>
+</html>
