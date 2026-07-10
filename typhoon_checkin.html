@@ -56,25 +56,14 @@
     font-size:14px;
     line-height:1.5;
   }
-  .counter-bar{
-    margin:16px 20px 0;
-    padding:14px 16px;
-    background:var(--panel);
-    border:1px solid var(--line);
-    border-radius:12px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-  }
-  .counter-label{font-size:13px;color:var(--muted);}
-  .counter-num{
-    font-family:'Courier New', monospace;
-    font-size:20px;
-    font-weight:700;
-    color:var(--amber);
+  .step-label{
+    margin:20px 20px 8px;
+    font-size:12.5px;
+    color:var(--muted);
+    letter-spacing:1px;
   }
   .search{
-    margin:16px 20px 8px;
+    margin:0 20px 8px;
   }
   .search input{
     width:100%;
@@ -88,77 +77,88 @@
   }
   .search input:focus{border-color:var(--amber);}
   .search input::placeholder{color:var(--muted);}
-  .toolbar{
-    display:flex;
-    gap:8px;
-    margin:10px 20px 6px;
-  }
-  .toolbar button{
-    flex:1;
-    padding:8px 0;
-    border-radius:8px;
-    border:1px solid var(--line);
-    background:transparent;
-    color:var(--muted);
-    font-size:12.5px;
-    cursor:pointer;
-  }
-  .toolbar button:hover{border-color:var(--amber);color:var(--amber);}
   .list{
     margin:10px 20px 0;
     display:flex;
     flex-direction:column;
     gap:8px;
+    max-height:44vh;
+    overflow-y:auto;
+    padding-bottom:4px;
   }
-  .row{
+  .name-row{
     display:flex;
     align-items:center;
     justify-content:space-between;
     background:var(--panel);
     border:1px solid var(--line);
     border-radius:12px;
-    padding:12px 14px;
+    padding:13px 14px;
+    cursor:pointer;
     transition:border-color .15s ease, background .15s ease;
   }
-  .row.you{
+  .name-row:hover{border-color:var(--amber);}
+  .name-row.selected{
     border-color:var(--amber);
     background:var(--panel-2);
   }
-  .name-wrap{display:flex;flex-direction:column;min-width:0;}
-  .name{
+  .name-row .name{
     font-size:15.5px;
     font-weight:600;
-    white-space:nowrap;
-    overflow:hidden;
-    text-overflow:ellipsis;
   }
-  .tag{
-    font-size:10.5px;
-    color:var(--amber);
-    margin-top:2px;
-  }
-  .toggle-group{
-    display:flex;
-    border:1px solid var(--line);
-    border-radius:999px;
-    overflow:hidden;
+  .name-row .check{
+    width:20px;height:20px;
+    border-radius:50%;
+    border:2px solid var(--line);
     flex-shrink:0;
   }
-  .toggle-group button{
-    border:none;
-    padding:7px 14px;
-    font-size:13px;
-    background:transparent;
-    color:var(--muted);
-    cursor:pointer;
-    font-weight:600;
+  .name-row.selected .check{
+    border-color:var(--amber);
+    background:var(--amber);
   }
-  .toggle-group button.active-yes{
+  .selected-panel{
+    margin:18px 20px 0;
+    padding:18px 16px;
+    background:var(--panel-2);
+    border:1px solid var(--amber);
+    border-radius:14px;
+    display:none;
+  }
+  .selected-panel.show{display:block;}
+  .selected-panel .who{
+    font-size:13px;
+    color:var(--muted);
+    margin-bottom:4px;
+  }
+  .selected-panel .who b{color:var(--amber);}
+  .selected-panel .q{
+    font-size:16px;
+    font-weight:700;
+    margin-bottom:14px;
+  }
+  .attend-toggle{
+    display:flex;
+    gap:10px;
+  }
+  .attend-toggle button{
+    flex:1;
+    padding:14px 0;
+    border-radius:10px;
+    border:1px solid var(--line);
+    background:var(--panel);
+    color:var(--text);
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .attend-toggle button.pick-yes.active{
     background:var(--ok);
+    border-color:var(--ok);
     color:#08281c;
   }
-  .toggle-group button.active-no{
+  .attend-toggle button.pick-no.active{
     background:var(--danger);
+    border-color:var(--danger);
     color:#2b0a0a;
   }
   .footer-bar{
@@ -193,6 +193,15 @@
   }
   .status-msg.ok{color:var(--ok);}
   .status-msg.err{color:var(--danger);}
+  .done-screen{
+    display:none;
+    text-align:center;
+    padding:80px 30px;
+  }
+  .done-screen.show{display:block;}
+  .done-screen .icon{font-size:44px;margin-bottom:16px;}
+  .done-screen h2{margin:0 0 8px;font-size:20px;}
+  .done-screen p{color:var(--muted);font-size:14px;}
 </style>
 </head>
 <body>
@@ -202,28 +211,36 @@
 <header>
   <div class="eyebrow">TYPHOON REPORT · 7/10</div>
   <h1>颱風天出勤回報</h1>
-  <div class="sub">請每位成員勾選 7/10 (五) 是否有到公司上班,完成後點擊下方送出。</div>
+  <div class="sub">請點選「你自己的名字」,回報 7/10 (五) 是否有到公司上班。每人只需回報自己這一筆。</div>
 </header>
 
-<div class="counter-bar">
-  <span class="counter-label">已回報</span>
-  <span class="counter-num" id="reportedCount">0 / 25</span>
+<div id="formArea">
+  <div class="step-label">STEP 1 · 找到你的名字</div>
+  <div class="search">
+    <input type="text" id="searchInput" placeholder="搜尋姓名...">
+  </div>
+  <div class="list" id="list"></div>
+
+  <div class="selected-panel" id="selectedPanel">
+    <div class="who">你選擇的是 <b id="selectedName"></b></div>
+    <div class="q">7/10 (五) 你有到公司上班嗎?</div>
+    <div class="attend-toggle">
+      <button class="pick-yes" id="pickYes">✓ 有來</button>
+      <button class="pick-no" id="pickNo">✕ 沒來</button>
+    </div>
+  </div>
+
+  <div style="height:170px;"></div>
 </div>
 
-<div class="search">
-  <input type="text" id="searchInput" placeholder="搜尋姓名...">
+<div class="done-screen" id="doneScreen">
+  <div class="icon">✓</div>
+  <h2>回報完成,謝謝你!</h2>
+  <p id="doneDetail"></p>
 </div>
 
-<div class="toolbar">
-  <button id="allYesBtn">全部有來</button>
-  <button id="allNoBtn">全部沒來</button>
-  <button id="resetBtn">重設</button>
-</div>
-
-<div class="list" id="list"></div>
-
-<div class="footer-bar">
-  <button class="submit-btn" id="submitBtn">送出回報</button>
+<div class="footer-bar" id="footerBar">
+  <button class="submit-btn" id="submitBtn" disabled>送出我的回報</button>
   <div class="status-msg" id="statusMsg"></div>
 </div>
 
@@ -260,12 +277,16 @@ const members = [
 // ====== 請將下面換成你自己部署的 Google Apps Script Web App URL ======
 const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyDvd7ox-AlYSiF81Zm6wtwOuJIZvONUawmBAo0r2TnxBjUFhEqpiwO57vDVBGKKB0h/exec";
 
-const state = {}; // name -> "yes" | "no" | null
-members.forEach(n => state[n] = null);
+let selectedName = null;   // 這台裝置的使用者選了哪個名字
+let selectedAttend = null; // "yes" | "no" | null
 
 const listEl = document.getElementById('list');
-const countEl = document.getElementById('reportedCount');
 const searchInput = document.getElementById('searchInput');
+const selectedPanel = document.getElementById('selectedPanel');
+const selectedNameEl = document.getElementById('selectedName');
+const pickYesBtn = document.getElementById('pickYes');
+const pickNoBtn = document.getElementById('pickNo');
+const submitBtn = document.getElementById('submitBtn');
 
 function render(filter=""){
   listEl.innerHTML = "";
@@ -273,88 +294,71 @@ function render(filter=""){
   members.forEach(name => {
     if(f && !name.toLowerCase().includes(f)) return;
     const row = document.createElement('div');
-    row.className = 'row' + (name === "Taylor" ? " you" : "");
+    row.className = 'name-row' + (name === selectedName ? ' selected' : '');
 
-    const nameWrap = document.createElement('div');
-    nameWrap.className = 'name-wrap';
     const nameEl = document.createElement('div');
     nameEl.className = 'name';
     nameEl.textContent = name;
-    nameWrap.appendChild(nameEl);
-    if(name === "Taylor"){
-      const tag = document.createElement('div');
-      tag.className = 'tag';
-      tag.textContent = '本人';
-      nameWrap.appendChild(tag);
-    }
 
-    const group = document.createElement('div');
-    group.className = 'toggle-group';
+    const check = document.createElement('div');
+    check.className = 'check';
 
-    const yesBtn = document.createElement('button');
-    yesBtn.textContent = '有來';
-    const noBtn = document.createElement('button');
-    noBtn.textContent = '沒來';
+    row.appendChild(nameEl);
+    row.appendChild(check);
 
-    function refreshBtns(){
-      yesBtn.className = state[name] === 'yes' ? 'active-yes' : '';
-      noBtn.className = state[name] === 'no' ? 'active-no' : '';
-    }
-    refreshBtns();
+    row.onclick = () => {
+      selectedName = name;
+      selectedAttend = null; // 換人重選時,清空有來/沒來的選擇
+      render(searchInput.value);
+      openSelectedPanel();
+    };
 
-    yesBtn.onclick = () => { state[name] = (state[name]==='yes') ? null : 'yes'; refreshBtns(); updateCount(); };
-    noBtn.onclick = () => { state[name] = (state[name]==='no') ? null : 'no'; refreshBtns(); updateCount(); };
-
-    group.appendChild(yesBtn);
-    group.appendChild(noBtn);
-
-    row.appendChild(nameWrap);
-    row.appendChild(group);
     listEl.appendChild(row);
   });
 }
 
-function updateCount(){
-  const reported = members.filter(n => state[n] !== null).length;
-  countEl.textContent = `${reported} / ${members.length}`;
+function openSelectedPanel(){
+  selectedNameEl.textContent = selectedName;
+  selectedPanel.classList.add('show');
+  refreshAttendButtons();
+  updateSubmitState();
+  selectedPanel.scrollIntoView({ behavior:'smooth', block:'center' });
 }
 
-document.getElementById('allYesBtn').onclick = () => {
-  members.forEach(n => state[n] = 'yes');
-  render(searchInput.value);
-  updateCount();
-};
-document.getElementById('allNoBtn').onclick = () => {
-  members.forEach(n => state[n] = 'no');
-  render(searchInput.value);
-  updateCount();
-};
-document.getElementById('resetBtn').onclick = () => {
-  members.forEach(n => state[n] = null);
-  render(searchInput.value);
-  updateCount();
-};
+function refreshAttendButtons(){
+  pickYesBtn.classList.toggle('active', selectedAttend === 'yes');
+  pickNoBtn.classList.toggle('active', selectedAttend === 'no');
+}
+
+pickYesBtn.onclick = () => { selectedAttend = 'yes'; refreshAttendButtons(); updateSubmitState(); };
+pickNoBtn.onclick = () => { selectedAttend = 'no'; refreshAttendButtons(); updateSubmitState(); };
+
+function updateSubmitState(){
+  submitBtn.disabled = !(selectedName && selectedAttend);
+}
 
 searchInput.addEventListener('input', (e) => render(e.target.value));
 
-document.getElementById('submitBtn').onclick = async () => {
+submitBtn.onclick = async () => {
   const statusMsg = document.getElementById('statusMsg');
-  const unreported = members.filter(n => state[n] === null);
-  if(unreported.length > 0){
+  if(!selectedName || !selectedAttend){
     statusMsg.className = 'status-msg err';
-    statusMsg.textContent = `尚有 ${unreported.length} 人未勾選,請確認後再送出。`;
+    statusMsg.textContent = '請先選擇你的名字並勾選有來/沒來。';
     return;
   }
 
-  const btn = document.getElementById('submitBtn');
-  btn.disabled = true;
+  submitBtn.disabled = true;
   statusMsg.className = 'status-msg';
   statusMsg.textContent = '送出中...';
 
+  // Apps Script 端維持不變:仍是接收 records 陣列並逐筆寫入,
+  // 這裡只是每次都只送出「這個人自己」這一筆。
   const payload = {
     date: "2026-07-10",
     submittedAt: new Date().toISOString(),
-    records: members.map(n => ({ name: n, attended: state[n] === 'yes' }))
+    records: [
+      { name: selectedName, attended: selectedAttend === 'yes' }
+    ]
   };
 
   try{
@@ -367,17 +371,21 @@ document.getElementById('submitBtn').onclick = async () => {
       headers: { 'Content-Type': 'text/plain' },
       body: JSON.stringify(payload)
     });
-    statusMsg.className = 'status-msg ok';
-    statusMsg.textContent = '回報成功,已記錄到 Google 工作表 ✓';
+
+    document.getElementById('formArea').style.display = 'none';
+    document.getElementById('footerBar').style.display = 'none';
+    const doneScreen = document.getElementById('doneScreen');
+    document.getElementById('doneDetail').textContent =
+      `${selectedName} · 7/10 ${selectedAttend === 'yes' ? '有來上班' : '沒有來上班'}`;
+    doneScreen.classList.add('show');
   }catch(err){
     statusMsg.className = 'status-msg err';
     statusMsg.textContent = '送出失敗:' + err.message;
-    btn.disabled = false;
+    submitBtn.disabled = false;
   }
 };
 
 render();
-updateCount();
 </script>
 
 </body>
